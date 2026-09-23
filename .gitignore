@@ -1,0 +1,8 @@
+# Comprovantes bancarios reais (dados sensiveis de clientes) -- nao versionar
+Comprovantes/
+
+# Planilha de trabalho (dados de clientes e valores) -- mantida privada, so local
+Controle_Recebimentos.xlsx
+
+# Configuracao local do Claude Code
+.claude/

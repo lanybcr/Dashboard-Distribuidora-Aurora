@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Aurora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..840&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241A12;
+    --ink-soft:#6F6152;
+    --ink-faint:#A79A87;
+    --bg-0:#FAF2E3;
+    --bg-1:#F1E1C6;
+    --bg-2:#ECDEE6;
+    --surface:#FFFCF6;
+    --surface-2:#FFF9EE;
+    --border:rgba(36,26,18,.10);
+    --border-soft:rgba(36,26,18,.06);
+    --accent:#B9791F;
+    --accent-deep:#8A5A15;
+    --accent-2:#6E3B63;
+    --accent-3:#2F6B5B;
+    --accent-4:#A6455A;
+    --neutral-bar:#B6A88E;
+    --shadow-1:0 1px 2px rgba(40,28,14,.06), 0 1px 1px rgba(40,28,14,.04);
+    --shadow-2:0 18px 40px -18px rgba(60,40,14,.28), 0 6px 18px -10px rgba(60,40,14,.18);
+    --shadow-3:0 30px 60px -24px rgba(60,40,14,.32);
+    --radius-lg:22px;
+    --radius-md:16px;
+    --radius-sm:10px;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{overflow-x:hidden;}
+  body{
+    background-color:var(--bg-0);
+    background-image:
+      radial-gradient(1100px 760px at 6% -8%, rgba(185,121,31,.18), transparent 58%),
+      radial-gradient(900px 680px at 104% -4%, rgba(110,59,99,.15), transparent 55%),
+      radial-gradient(1000px 820px at 46% 118%, rgba(47,107,91,.11), transparent 58%),
+      linear-gradient(178deg, var(--bg-0) 0%, var(--bg-1) 55%, var(--bg-2) 100%);
+    color:var(--ink);
+    font-family:'Manrope',ui-sans-serif,system-ui,-apple-system,sans-serif;
+    font-variant-numeric:tabular-nums;
+    min-height:100%;
+    position:relative;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.05;
+    mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  h1,h2,h3,.display{
+    font-family:'Fraunces',Georgia,'Times New Roman',serif;
+    font-weight:600;
+    letter-spacing:-.01em;
+    text-wrap:balance;
+  }
+
+  .app{position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:22px 20px 64px;}
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+    padding:6px 2px 26px;
+  }
+  .brand{display:flex; flex-direction:column; gap:2px;}
+  .brand-mark{
+    font-family:'Fraunces',serif; font-weight:700; font-size:1.35rem; letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .brand-mark::after{content:" \00b7 Distribuidora"; font-weight:400; color:var(--ink-soft); font-size:.62em; font-family:'Manrope',sans-serif; letter-spacing:.14em; text-transform:uppercase;}
+  .brand-sub{font-size:.78rem; color:var(--ink-soft); letter-spacing:.01em;}
+
+  .tabs{
+    display:inline-flex; gap:2px; padding:4px; border-radius:999px;
+    background:rgba(255,255,255,.55);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-1);
+    backdrop-filter:blur(6px);
+  }
+  .tab{
+    appearance:none; border:none; background:transparent; cursor:pointer;
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:.86rem;
+    padding:9px 18px; border-radius:999px; color:var(--ink-soft);
+    transition:color .25s ease, background-color .25s ease, box-shadow .25s ease;
+    white-space:nowrap;
+  }
+  .tab.active{color:#fff; background:linear-gradient(155deg, var(--accent), var(--accent-deep)); box-shadow:0 8px 18px -8px rgba(138,90,21,.55);}
+  .tab:not(.active):hover{color:var(--ink); background:rgba(36,26,18,.05);}
+
+  /* ---------- generic surface / layering ---------- */
+  .surface{
+    background:linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-2);
+    position:relative;
+  }
+  .surface::after{
+    content:"";
+    position:absolute; inset:0; border-radius:inherit;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65);
+    pointer-events:none;
+  }
+
+  /* ---------- tab panels ---------- */
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block; animation:panelIn .5s cubic-bezier(.2,.7,.2,1);}
+  @keyframes panelIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  /* ---------- entrance animation ---------- */
+  .rise{opacity:0; transform:translateY(18px); animation:riseIn .7s cubic-bezier(.2,.7,.15,1) forwards; animation-delay:calc(var(--i,0) * 70ms);}
+  @keyframes riseIn{to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion:reduce){
+    .rise{animation:none; opacity:1; transform:none;}
+    .tab-panel.active{animation:none;}
+    *{transition-duration:.001ms !important;}
+  }
+
+  /* ---------- hero row ---------- */
+  .hero-row{display:grid; grid-template-columns:1.35fr 1fr; gap:18px; margin-bottom:20px;}
+  .hero-card{
+    min-width:0;
+    padding:40px 40px 34px;
+    display:flex; flex-direction:column; gap:10px; justify-content:center; min-height:230px;
+    overflow:hidden;
+  }
+  .hero-card::before{
+    content:"";
+    position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(185,121,31,.20), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-label{
+    font-size:.74rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .hero-number{
+    font-family:'Fraunces',serif; font-weight:620; font-variation-settings:"opsz" 144;
+    font-size:clamp(2.6rem, 9.2vw, 6.2rem);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    background:linear-gradient(160deg, var(--accent-deep), var(--accent) 55%, var(--accent-4));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    white-space:nowrap;
+    transition:opacity .25s ease;
+  }
+  .hero-precise{font-size:.78rem; color:var(--ink-faint); letter-spacing:.01em;}
+  .hero-empty-note{font-size:.85rem; color:var(--ink-soft); display:none;}
+
+  .kpi-strip{display:grid; grid-template-columns:1fr 1fr; gap:14px; min-width:0;}
+  .kpi-card{
+    min-width:0;
+    padding:20px 20px;
+    display:flex; flex-direction:column; gap:6px; justify-content:center; min-height:104px;
+  }
+  .kpi-label{font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);}
+  .kpi-value{font-size:clamp(1.05rem,2.1vw,1.4rem); font-weight:800; color:var(--ink); line-height:1.15; overflow-wrap:normal; word-break:normal;}
+  .kpi-sub{font-size:.78rem; color:var(--ink-faint);}
+
+  /* ---------- filters ---------- */
+  .filters{
+    padding:20px 24px;
+    display:flex; align-items:flex-start; gap:26px; flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .filter-group{display:flex; flex-direction:column; gap:9px; min-width:0; flex:1 1 320px;}
+  .filter-title{font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);}
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    appearance:none; cursor:pointer; font-family:'Manrope',sans-serif; font-weight:600; font-size:.82rem;
+    padding:7px 14px; border-radius:999px; border:1px solid var(--border);
+    background:rgba(255,255,255,.5); color:var(--ink);
+    transition:background-color .22s ease, color .22s ease, opacity .22s ease, border-color .22s ease, transform .15s ease;
+    white-space:nowrap;
+  }
+  .chip:hover:not(:disabled){transform:translateY(-1px); border-color:rgba(36,26,18,.22);}
+  .chip.is-selected{background:linear-gradient(150deg, var(--accent), var(--accent-deep)); border-color:transparent; color:#fff; box-shadow:0 6px 14px -8px rgba(138,90,21,.6);}
+  .chip:disabled{opacity:.32; cursor:not-allowed; pointer-events:none; filter:grayscale(.3);}
+  .clear-btn{
+    align-self:center; margin-left:auto; appearance:none; cursor:pointer; border:none;
+    background:transparent; color:var(--accent-deep); font-weight:700; font-size:.8rem;
+    text-decoration:underline; text-underline-offset:3px; padding:8px 4px;
+  }
+  .clear-btn:hover{color:var(--accent);}
+
+  /* ---------- results area / empty state ---------- */
+  #emptyState{display:none; padding:64px 30px; text-align:center; flex-direction:column; align-items:center; gap:10px; margin-bottom:22px;}
+  #emptyState.show{display:flex;}
+  #emptyState h3{font-size:1.3rem; margin:0;}
+  #emptyState p{color:var(--ink-soft); margin:0; max-width:420px; font-size:.92rem;}
+
+  /* ---------- chart grid ---------- */
+  .chart-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .chart-card{padding:24px 24px 20px; display:flex; flex-direction:column; min-height:340px; min-width:0;}
+  .chart-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:18px;}
+  .chart-title{font-size:1.02rem; font-weight:700; font-family:'Fraunces',serif;}
+  .chart-note{font-size:.72rem; color:var(--ink-faint);}
+  .chart-empty{margin:auto; text-align:center; color:var(--ink-faint); font-size:.85rem; padding:20px;}
+
+  /* vertical bars (month / region / category) */
+  .vbars{display:flex; align-items:flex-end; gap:10px; height:190px; padding:0 2px;}
+  .vbar-item{flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0; position:relative;}
+  .vbar-track{width:100%; height:100%; display:flex; align-items:flex-end; justify-content:center;}
+  .vbar-value{font-size:.72rem; font-weight:700; color:var(--ink); margin-bottom:6px; white-space:nowrap; transition:opacity .3s ease;}
+  .vbar-fill{
+    width:68%; border-radius:8px 8px 4px 4px; min-height:3px;
+    transition:height .6s cubic-bezier(.2,.7,.2,1), opacity .35s ease, filter .35s ease;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 6px 14px -8px rgba(40,28,14,.28);
+    cursor:pointer;
+  }
+  .vbar-item.is-dim .vbar-fill{opacity:.28; filter:saturate(.55);}
+  .vbar-item.is-dim .vbar-value{opacity:.4;}
+  .vbar-item.is-active .vbar-fill{box-shadow:0 0 0 2px rgba(255,255,255,.7) inset, 0 10px 18px -8px rgba(40,28,14,.4);}
+  .vbar-label{margin-top:10px; font-size:.72rem; font-weight:700; color:var(--ink-soft); text-align:center; line-height:1.2; overflow-wrap:normal; word-break:normal; letter-spacing:.02em;}
+  .vbar-label.is-region{font-size:.78rem; letter-spacing:.06em; text-transform:uppercase;}
+  .vbar-item.is-dim .vbar-label{color:var(--ink-faint);}
+
+  /* horizontal ranking */
+  .rank-list{display:flex; flex-direction:column; gap:11px; flex:1;}
+  .rank-row{display:flex; align-items:center; gap:12px;}
+  .rank-idx{font-family:'Fraunces',serif; font-weight:600; font-size:.85rem; color:var(--ink-faint); width:18px; flex:none; text-align:right;}
+  .rank-name{width:34%; flex:0 0 34%; font-size:.79rem; font-weight:700; color:var(--ink); line-height:1.2; overflow-wrap:normal; word-break:normal;}
+  .rank-track{flex:1 1 auto; height:15px; border-radius:8px; background:rgba(36,26,18,.06); overflow:hidden; position:relative;}
+  .rank-fill{display:block; height:100%; border-radius:8px; transition:width .6s cubic-bezier(.2,.7,.2,1); cursor:pointer;}
+  .rank-value{flex:0 0 auto; font-size:.76rem; font-weight:700; color:var(--ink-soft); min-width:70px; text-align:right; white-space:nowrap;}
+
+  /* ---------- tooltip ---------- */
+  .tt{
+    position:fixed; z-index:50; pointer-events:none; max-width:270px;
+    background:linear-gradient(180deg, #2A2015, #1E1710);
+    color:#F3EADA; border-radius:12px; padding:12px 14px;
+    box-shadow:0 20px 40px -12px rgba(0,0,0,.45);
+    font-size:.78rem; line-height:1.42;
+    opacity:0; transform:translateY(4px) scale(.98);
+    transition:opacity .16s ease, transform .16s ease;
+  }
+  .tt.show{opacity:1; transform:none;}
+  .tt-title{font-weight:800; font-size:.82rem; margin-bottom:6px; color:#fff;}
+  .tt-row{display:flex; justify-content:space-between; gap:10px; padding:2px 0;}
+  .tt-row span:first-child{color:#D8CBB5;}
+  .tt-row span:last-child{font-weight:700;}
+  .tt-hr{height:1px; background:rgba(255,255,255,.14); margin:6px 0;}
+  .tt-foot{color:#B6A88E; font-size:.7rem; margin-top:6px;}
+
+  /* ---------- insights tab ---------- */
+  .insights-intro{padding:30px 34px; margin-bottom:22px;}
+  .insights-intro .eyebrow{font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); margin-bottom:8px;}
+  .insights-intro h2{font-size:clamp(1.4rem,2.6vw,1.9rem); margin:0 0 10px; max-width:820px;}
+  .insights-intro p{margin:0; color:var(--ink-soft); font-size:.95rem; max-width:680px;}
+
+  .insight-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px;}
+  .insight-card{padding:26px 28px; display:flex; flex-direction:column; gap:10px; min-width:0;}
+  .insight-card .tag{font-size:.68rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#fff; background:linear-gradient(150deg, var(--accent), var(--accent-deep)); padding:5px 11px; border-radius:999px; align-self:flex-start;}
+  .insight-card.plum .tag{background:linear-gradient(150deg, #8A5A7B, var(--accent-2));}
+  .insight-card.teal .tag{background:linear-gradient(150deg, #3E8D77, var(--accent-3));}
+  .insight-card.rose .tag{background:linear-gradient(150deg, #C05F72, var(--accent-4));}
+  .insight-card h3{font-size:1.18rem; margin:2px 0 0;}
+  .insight-card p{margin:0; color:var(--ink-soft); font-size:.88rem; line-height:1.55;}
+  .insight-card .rec{
+    margin-top:6px; padding-top:12px; border-top:1px dashed var(--border);
+    font-size:.83rem; color:var(--ink); font-weight:600; line-height:1.5;
+  }
+  .insight-card .rec::before{content:"Recomendação — "; font-weight:800; color:var(--accent-deep);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){
+    .hero-row{grid-template-columns:1fr;}
+    .kpi-strip{grid-template-columns:1fr 1fr;}
+    .chart-grid{grid-template-columns:1fr;}
+    .insight-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:620px){
+    .kpi-strip{grid-template-columns:1fr;}
+    .hero-card{padding:32px 24px 28px;}
+    .filters{padding:18px;}
+    .rank-row{
+      display:grid;
+      grid-template-columns:16px 1fr auto;
+      grid-template-areas:"idx name value" "bar bar bar";
+      row-gap:6px; column-gap:8px; align-items:center;
+      padding-bottom:10px; margin-bottom:2px; border-bottom:1px solid var(--border-soft);
+    }
+    .rank-idx{grid-area:idx; width:auto; text-align:left;}
+    .rank-name{grid-area:name; width:auto;}
+    .rank-value{grid-area:value; min-width:0;}
+    .rank-track{grid-area:bar; width:100%;}
+    .insights-intro{padding:24px 20px;}
+    .insight-card{padding:22px 20px;}
+  }
+  @media (max-width:600px){
+    #chartRegion .vbar-value{display:none;}
+  }
+  @media (max-width:420px){
+    .vbar-label{font-size:.62rem;}
+    .vbar-value{font-size:.62rem;}
+    #chartCategory .vbar-value{display:none;}
+    #chartMonth .vbar-value{display:none;}
+  }
+</style>
+
+
+</head>
+<body>
+<div class="app">
+  <header class="topbar rise" style="--i:0">
+    <div class="brand">
+      <span class="brand-mark">AURORA</span>
+      <span class="brand-sub">Recebimentos · 1º semestre de 2026</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="painel" role="tab" aria-selected="true">Painel</button>
+      <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-painel" class="tab-panel active">
+
+      <div class="filters surface rise" style="--i:1">
+        <div class="filter-group">
+          <span class="filter-title">Região</span>
+          <div class="chip-row" id="regionChips"></div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-title">Categoria</span>
+          <div class="chip-row" id="categoryChips"></div>
+        </div>
+        <button class="clear-btn" id="clearFilters" hidden>Limpar filtros</button>
+      </div>
+
+      <div id="emptyState" class="surface">
+        <h3>Nenhum recebimento para essa combinação</h3>
+        <p>Os filtros selecionados não têm recebimentos em comum. Ajuste a região ou a categoria para ver o painel novamente.</p>
+        <button class="clear-btn" id="emptyClear" style="margin:6px auto 0;">Limpar filtros</button>
+      </div>
+
+      <div id="normalContent">
+        <div class="hero-row">
+          <div class="hero-card surface rise" style="--i:2">
+            <span class="hero-label">Total recebido no semestre</span>
+            <div class="hero-number" id="heroNumber">R$&nbsp;0</div>
+            <span class="hero-precise" id="heroPrecise"></span>
+          </div>
+          <div class="kpi-strip">
+            <div class="kpi-card surface rise" style="--i:3">
+              <span class="kpi-label">Recebimentos</span>
+              <span class="kpi-value" id="kpiCount">0</span>
+            </div>
+            <div class="kpi-card surface rise" style="--i:4">
+              <span class="kpi-label">Ticket médio</span>
+              <span class="kpi-value" id="kpiTicket">R$ 0</span>
+            </div>
+            <div class="kpi-card surface rise" style="--i:5">
+              <span class="kpi-label">Melhor mês</span>
+              <span class="kpi-value" id="kpiMonth">—</span>
+              <span class="kpi-sub" id="kpiMonthSub"></span>
+            </div>
+            <div class="kpi-card surface rise" style="--i:6">
+              <span class="kpi-label">Maior cliente</span>
+              <span class="kpi-value" id="kpiClient">—</span>
+              <span class="kpi-sub" id="kpiClientSub"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card surface rise" style="--i:7">
+            <div class="chart-head">
+              <span class="chart-title">Caixa por mês</span>
+              <span class="chart-note">janeiro a junho</span>
+            </div>
+            <div class="vbars" id="chartMonth"></div>
+          </div>
+
+          <div class="chart-card surface rise" style="--i:8">
+            <div class="chart-head">
+              <span class="chart-title">Caixa por região</span>
+              <span class="chart-note" id="regionNote">todas</span>
+            </div>
+            <div class="vbars" id="chartRegion"></div>
+          </div>
+
+          <div class="chart-card surface rise" style="--i:9">
+            <div class="chart-head">
+              <span class="chart-title">Caixa por categoria</span>
+              <span class="chart-note" id="categoryNote">todas</span>
+            </div>
+            <div class="vbars" id="chartCategory"></div>
+          </div>
+
+          <div class="chart-card surface rise" style="--i:10">
+            <div class="chart-head">
+              <span class="chart-title">Ranking de clientes</span>
+              <span class="chart-note">maior para o menor</span>
+            </div>
+            <div class="rank-list" id="chartRanking"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-insights" class="tab-panel">
+      <div class="insights-intro surface rise" style="--i:1">
+        <div class="eyebrow">Leitura do semestre</div>
+        <h2>Caixa concentrado, mas sem sinal de queda estrutural</h2>
+        <p>O semestre fechou em R$&nbsp;4.218.199,02, com bom ritmo de crescimento até abril, uma retração pontual em maio e recuperação em junho. O risco real não está na trajetória — está em quão poucas contas sustentam o resultado.</p>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card surface rise" style="--i:2">
+          <span class="tag">Caixa mês a mês</span>
+          <h3>Alta constante até abril, queda de 30,6% em maio</h3>
+          <p>O caixa cresceu em todos os meses entre janeiro e abril — de R$&nbsp;631.364 para R$&nbsp;864.938, alta de 37% no acumulado. Em maio recuou para R$&nbsp;599.898 e em junho recuperou 23,6%, fechando em R$&nbsp;741.427. A queda de maio não foi ampla: um único cliente, Supermercado Família, respondeu por R$&nbsp;192 mil dos R$&nbsp;265 mil de retração do mês.</p>
+          <p class="rec">Confirmar com Supermercado Família se o recuo foi atraso de pagamento ou queda real de consumo antes de tratar maio como tendência.</p>
+        </div>
+
+        <div class="insight-card plum surface rise" style="--i:3">
+          <span class="tag">Regiões em direções opostas</span>
+          <h3>Norte/PA cresce 47%; Nordeste/PE cai 41% no mesmo período</h3>
+          <p>Norte/PA é hoje a maior região (27% do caixa) e cresceu 47% do primeiro para o segundo trimestre. Nordeste/PE (21% do caixa) fez o caminho inverso: era a região mais forte do primeiro trimestre e perdeu 41% no segundo — a maior reversão entre as nove regiões ativas.</p>
+          <p class="rec">Priorizar diagnóstico comercial em Nordeste/PE no 3º trimestre; a região depende hoje de um único cliente, a Adega Ponto do Vinho.</p>
+        </div>
+
+        <div class="insight-card teal surface rise" style="--i:4">
+          <span class="tag">O que sustenta o caixa</span>
+          <h3>Hortifruti sozinha soma 39% do caixa do semestre</h3>
+          <p>Hortifruti (R$&nbsp;1.643.579) é a maior categoria, puxada por apenas dois clientes — Hortifruti Natural e Supermercado Família. Bebidas (30,2%) e Mercearia (21,2%) completam quase todo o restante; Higiene e Limpeza é hoje marginal, com 1,1% do caixa.</p>
+          <p class="rec">Tratar Hortifruti como concentração, não só como força: qualquer oscilação nesses dois clientes move quase 40% do caixa.</p>
+        </div>
+
+        <div class="insight-card rose surface rise" style="--i:5">
+          <span class="tag">Concentração de clientes</span>
+          <h3>3 clientes respondem por 65,8% de tudo que entrou</h3>
+          <p>Supermercado Família, Adega Ponto do Vinho e Atacado União Comercial somam 65,8% do caixa do semestre; os cinco maiores chegam a 86,7%. Os outros nove clientes cadastrados dividem menos de 14% do total.</p>
+          <p class="rec">Um plano de retenção dedicado aos 3 principais clientes protege a maior parte da receita — é o maior risco estrutural do caixa hoje.</p>
+        </div>
+
+        <div class="insight-card surface rise" style="--i:6">
+          <span class="tag">Fora do cadastro</span>
+          <h3>R$&nbsp;58.209 (1,4% do caixa) vieram de 4 pagadores não cadastrados</h3>
+          <p>Padaria e Confeitaria Trigo de Ouro, Bar e Restaurante Estrela do Sul, Empório Vila Nova e Mercearia São Joaquim pagaram uma vez cada, todos entre fevereiro e março — nenhum voltou a aparecer depois. Enquanto não forem classificados, ficam fora de qualquer leitura por região ou categoria.</p>
+          <p class="rec">Decidir em até 30 dias se são clientes novos a cadastrar ou recebimentos pontuais fora do escopo atual do cadastro.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="tt" id="tooltip"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var RECORDS = [{"d":"2026-01-01","c":"Atacado Uniao Comercial","v":19870.0,"f":"Liquidacao de titulo","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-01-05","c":"Supermercado Familia","v":14870.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-06","c":"Hortifruti Natural","v":32588.48,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-01-08","c":"Distribuidora Bebidas Lopes","v":21750.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-11","c":"Adega Ponto do Vinho","v":51323.96,"f":"Liquidacao de titulo","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-01-12","c":"Hortifruti Natural","v":5350.0,"f":"Deposito","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-01-13","c":"Rede Farmacias Popular","v":8179.8,"f":"Liquidacao de Titulo","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-01-13","c":"Atacado Uniao Comercial","v":18200.0,"f":"Boleto","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-01-13","c":"Supermercado Familia","v":12800.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-13","c":"Supermercado Familia","v":17910.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-13","c":"Rede Supermercados Mais","v":41510.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-01-14","c":"Mercadao Central","v":6510.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-01-14","c":"Adega Ponto do Vinho","v":7481.72,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-01-15","c":"Frigorifico Vale Verde","v":5704.87,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-01-16","c":"Distribuidora Bebidas Lopes","v":11250.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-16","c":"Distribuidora Bebidas Lopes","v":13230.0,"f":"Boleto","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-16","c":"Supermercado Familia","v":8040.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-16","c":"Hortifruti Natural","v":48773.87,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-01-19","c":"Supermercado Familia","v":53640.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-19","c":"Distribuidora Bebidas Lopes","v":33440.0,"f":"Transferencia","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-20","c":"Mercadao Central","v":5740.0,"f":"Transferencia","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-01-21","c":"Mercadao Central","v":20530.0,"f":"Boleto","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-01-23","c":"Distribuidora Bebidas Lopes","v":8270.44,"f":"Boleto","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-26","c":"Adega Ponto do Vinho","v":11450.0,"f":"Boleto","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-01-26","c":"Adega Ponto do Vinho","v":12364.41,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-01-26","c":"Atacado Uniao Comercial","v":10240.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-01-26","c":"Atacado Uniao Comercial","v":7783.88,"f":"Liquidacao de titulo","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-01-29","c":"Hortifruti Natural","v":8920.0,"f":"Boleto","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-01-29","c":"Distribuidora Bebidas Lopes","v":13755.81,"f":"Boleto","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-29","c":"Frigorifico Vale Verde","v":5588.94,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-01-29","c":"Distribuidora Bebidas Lopes","v":7020.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-01-30","c":"Atacado Uniao Comercial","v":16670.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-01-30","c":"Supermercado Familia","v":69750.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-01-30","c":"Comercial Amazonas","v":857.8,"f":"Pix","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-02-02","c":"Comercial Amazonas","v":380.0,"f":"Boleto","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-02-03","c":"Atacado Uniao Comercial","v":11080.0,"f":"Boleto","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-02-03","c":"Adega Ponto do Vinho","v":4580.0,"f":"Pagamento de titulo","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-05","c":"Adega Ponto do Vinho","v":92480.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-05","c":"Distribuidora Bebidas Lopes","v":14980.0,"f":"Boleto","r":"Sul/RS","g":"Bebidas"},{"d":"2026-02-06","c":"Padaria e Confeitaria Trigo de Ouro","v":8330.0,"f":"Deposito","r":null,"g":null},{"d":"2026-02-09","c":"Frigorifico Vale Verde","v":6280.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-02-11","c":"Bar e Restaurante Estrela do Sul","v":7040.0,"f":"Pix","r":null,"g":null},{"d":"2026-02-12","c":"Atacado Uniao Comercial","v":22930.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-02-13","c":"Supermercado Familia","v":14580.0,"f":"Liquidacao de Titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-02-13","c":"Rede Supermercados Mais","v":13198.52,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-02-13","c":"Distribuidora Bebidas Lopes","v":29770.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-02-15","c":"Frigorifico Vale Verde","v":4740.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-02-15","c":"Supermercado Familia","v":9226.7,"f":"Transferencia","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-02-16","c":"Supermercado Familia","v":20420.0,"f":"Boleto bancario","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-02-16","c":"Hortifruti Natural","v":9270.0,"f":"Deposito","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-02-17","c":"Adega Ponto do Vinho","v":9730.0,"f":"Liquidacao de titulo","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-17","c":"Hortifruti Natural","v":13759.65,"f":"Liquidacao de titulo","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-02-17","c":"Supermercado Familia","v":12990.0,"f":"Liquidacao de titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-02-17","c":"Atacado Uniao Comercial","v":65960.0,"f":"TED","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-02-17","c":"Atacado Uniao Comercial","v":15020.0,"f":"Pagamento de Titulo","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-02-18","c":"Mercadao Central","v":10070.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-02-19","c":"Comercial Amazonas","v":500.0,"f":"Pix","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-02-19","c":"Adega Ponto do Vinho","v":35190.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-19","c":"Adega Ponto do Vinho","v":13025.02,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-20","c":"Rede Supermercados Mais","v":12040.0,"f":"Liquidacao de titulo","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-02-23","c":"Adega Ponto do Vinho","v":28631.18,"f":"Boleto","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-02-24","c":"Supermercado Familia","v":23368.59,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-02-25","c":"Hortifruti Natural","v":20430.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-02-25","c":"Hortifruti Natural","v":10540.0,"f":"Transferencia","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-02-26","c":"Distribuidora Bebidas Lopes","v":15000.0,"f":"Deposito","r":"Sul/RS","g":"Bebidas"},{"d":"2026-02-26","c":"Mercadao Central","v":11910.0,"f":"Transferencia","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-02-28","c":"Adega Ponto do Vinho","v":94000.0,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-03","c":"Rede Supermercados Mais","v":13770.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-03-05","c":"Rede Farmacias Popular","v":2450.0,"f":"Pix","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-03-06","c":"Supermercado Familia","v":41650.0,"f":"Liquidacao de titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-08","c":"Adega Ponto do Vinho","v":12580.0,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-10","c":"Rede Farmacias Popular","v":1890.0,"f":"Pix","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-03-11","c":"Mercadao Central","v":3870.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-03-11","c":"Supermercado Familia","v":31990.0,"f":"Liquidacao de titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-11","c":"Adega Ponto do Vinho","v":10960.0,"f":"Liquidacao de titulo","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-11","c":"Atacado Uniao Comercial","v":30131.94,"f":"Transferencia","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-03-11","c":"Rede Supermercados Mais","v":10440.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-03-12","c":"Hortifruti Natural","v":7750.03,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-03-12","c":"Hortifruti Natural","v":20910.0,"f":"Deposito em conta","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-03-13","c":"Adega Ponto do Vinho","v":11612.3,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-13","c":"Atacado Uniao Comercial","v":46221.56,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-03-16","c":"Atacado Uniao Comercial","v":32690.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-03-16","c":"Hortifruti Natural","v":7490.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-03-16","c":"Rede Farmacias Popular","v":8650.0,"f":"Deposito","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-03-17","c":"Emporio Vila Nova Ltda","v":22271.71,"f":"Boleto bancario","r":null,"g":null},{"d":"2026-03-17","c":"Frigorifico Vale Verde","v":7260.0,"f":"Boleto","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-03-20","c":"Adega Ponto do Vinho","v":30356.99,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-23","c":"Frigorifico Vale Verde","v":5330.0,"f":"Boleto","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-03-23","c":"Hortifruti Natural","v":31290.0,"f":"Deposito em conta","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-03-23","c":"Comercial Amazonas","v":380.0,"f":"Pix","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-03-24","c":"Adega Ponto do Vinho","v":18260.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-24","c":"Adega Ponto do Vinho","v":7336.41,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-25","c":"Hortifruti Natural","v":26900.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-03-26","c":"Distribuidora Bebidas Lopes","v":14320.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-03-26","c":"Supermercado Familia","v":9250.0,"f":"Pagamento de titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-27","c":"Supermercado Familia","v":12383.52,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-30","c":"Supermercado Familia","v":68960.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-30","c":"Supermercado Familia","v":13460.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-30","c":"Adega Ponto do Vinho","v":63220.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-03-30","c":"Mercearia Sao Joaquim","v":20567.47,"f":"Pix","r":null,"g":null},{"d":"2026-03-30","c":"Supermercado Familia","v":29320.0,"f":"Pagamento de Titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-03-31","c":"Adega Ponto do Vinho","v":43200.0,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-04-01","c":"Hortifruti Natural","v":8700.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-04-01","c":"Rede Supermercados Mais","v":4490.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-01","c":"Rede Supermercados Mais","v":17930.0,"f":"Transferencia","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-02","c":"Supermercado Familia","v":34481.73,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-02","c":"Frigorifico Vale Verde","v":9590.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-04-03","c":"Adega Ponto do Vinho","v":18340.0,"f":"Transferencia","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-04-03","c":"Atacado Uniao Comercial","v":29185.53,"f":"Boleto","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-04-05","c":"Rede Supermercados Mais","v":7170.0,"f":"TED","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-06","c":"Supermercado Familia","v":69409.13,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-06","c":"Distribuidora Bebidas Lopes","v":38860.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-04-06","c":"Supermercado Familia","v":94000.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-07","c":"Supermercado Familia","v":14880.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-07","c":"Adega Ponto do Vinho","v":36220.0,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-04-09","c":"Hortifruti Natural","v":17380.0,"f":"Deposito","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-04-09","c":"Rede Farmacias Popular","v":1410.0,"f":"Boleto","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-04-10","c":"Hortifruti Natural","v":22390.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-04-10","c":"Comercial Amazonas","v":450.0,"f":"Pix","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-04-10","c":"Supermercado Familia","v":30898.49,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-10","c":"Rede Farmacias Popular","v":1690.0,"f":"Pix","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-04-10","c":"Rede Supermercados Mais","v":10450.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-13","c":"Comercial Amazonas","v":1660.0,"f":"Pix","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-04-14","c":"Hortifruti Natural","v":8891.33,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-04-15","c":"Supermercado Familia","v":39712.69,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-15","c":"Atacado Uniao Comercial","v":50320.0,"f":"Deposito","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-04-17","c":"Supermercado Familia","v":33820.0,"f":"TED","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-17","c":"Distribuidora Bebidas Lopes","v":26590.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-04-17","c":"Rede Supermercados Mais","v":4990.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-17","c":"Frigorifico Vale Verde","v":4090.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-04-17","c":"Rede Supermercados Mais","v":10620.0,"f":"Boleto","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-20","c":"Rede Supermercados Mais","v":14340.0,"f":"Deposito","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-04-20","c":"Supermercado Familia","v":27860.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-04-21","c":"Frigorifico Vale Verde","v":3820.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-04-23","c":"Adega Ponto do Vinho","v":9090.0,"f":"Deposito","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-04-25","c":"Frigorifico Vale Verde","v":16220.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-04-26","c":"Comercial Amazonas","v":674.96,"f":"TED","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-04-28","c":"Distribuidora Bebidas Lopes","v":19793.9,"f":"Boleto","r":"Sul/RS","g":"Bebidas"},{"d":"2026-04-28","c":"Adega Ponto do Vinho","v":25453.69,"f":"Pagamento de titulo","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-04-28","c":"Hortifruti Natural","v":6070.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-04-29","c":"Hortifruti Natural","v":92996.86,"f":"Liquidacao de Titulo","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-05-01","c":"Adega Ponto do Vinho","v":16070.0,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-05-01","c":"Adega Ponto do Vinho","v":34070.0,"f":"Boleto","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-05-01","c":"Adega Ponto do Vinho","v":14070.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-05-03","c":"Supermercado Familia","v":28530.0,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-05","c":"Atacado Uniao Comercial","v":9670.0,"f":"Liquidacao de titulo","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-05-06","c":"Atacado Uniao Comercial","v":21930.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-05-07","c":"Atacado Uniao Comercial","v":21470.33,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-05-07","c":"Distribuidora Bebidas Lopes","v":8930.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-07","c":"Distribuidora Bebidas Lopes","v":19760.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-07","c":"Supermercado Familia","v":30480.0,"f":"TED","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-08","c":"Hortifruti Natural","v":19810.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-05-08","c":"Hortifruti Natural","v":17310.0,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-05-08","c":"Hortifruti Natural","v":27110.0,"f":"Boleto","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-05-11","c":"Mercadao Central","v":27015.3,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-05-11","c":"Supermercado Familia","v":20910.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-12","c":"Distribuidora Bebidas Lopes","v":12350.0,"f":"Pagamento de titulo","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-13","c":"Hortifruti Natural","v":12606.74,"f":"Pix","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-05-13","c":"Distribuidora Bebidas Lopes","v":4150.0,"f":"Transferencia","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-14","c":"Rede Supermercados Mais","v":6983.0,"f":"Deposito","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-05-14","c":"Mercadao Central","v":12320.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-05-15","c":"Distribuidora Bebidas Lopes","v":15890.0,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-19","c":"Rede Supermercados Mais","v":4170.0,"f":"Liquidacao de Titulo","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-05-19","c":"Distribuidora Bebidas Lopes","v":14809.45,"f":"TED","r":"Sul/RS","g":"Bebidas"},{"d":"2026-05-19","c":"Mercadao Central","v":2696.29,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-05-20","c":"Rede Supermercados Mais","v":6320.0,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-05-21","c":"Adega Ponto do Vinho","v":37894.99,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-05-21","c":"Supermercado Familia","v":21320.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-21","c":"Supermercado Familia","v":24330.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-21","c":"Comercial Amazonas","v":380.0,"f":"Boleto","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-05-22","c":"Supermercado Familia","v":16480.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-25","c":"Supermercado Familia","v":10990.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-05-27","c":"Mercadao Central","v":7912.5,"f":"TED","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-05-29","c":"Rede Farmacias Popular","v":3694.5,"f":"Transferencia","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-05-29","c":"Atacado Uniao Comercial","v":33365.19,"f":"Deposito","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-05-31","c":"Rede Farmacias Popular","v":5240.0,"f":"Pix","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-05-31","c":"Atacado Uniao Comercial","v":28860.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-01","c":"Rede Farmacias Popular","v":1130.0,"f":"Boleto","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-06-01","c":"Adega Ponto do Vinho","v":12610.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-04","c":"Rede Supermercados Mais","v":3480.53,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-06-05","c":"Atacado Uniao Comercial","v":18980.0,"f":"Boleto","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-05","c":"Supermercado Familia","v":13830.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-05","c":"Supermercado Familia","v":22030.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-08","c":"Frigorifico Vale Verde","v":5034.3,"f":"Pagamento de titulo","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-06-08","c":"Rede Supermercados Mais","v":18786.32,"f":"Pix","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-06-08","c":"Atacado Uniao Comercial","v":60570.0,"f":"Deposito","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-09","c":"Atacado Uniao Comercial","v":50100.0,"f":"TED","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-10","c":"Adega Ponto do Vinho","v":25375.67,"f":"TED","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-10","c":"Adega Ponto do Vinho","v":26980.0,"f":"Deposito","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-12","c":"Atacado Uniao Comercial","v":12447.95,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-12","c":"Rede Supermercados Mais","v":8510.0,"f":"Boleto","r":"Sudeste/SP","g":"Congelados"},{"d":"2026-06-12","c":"Adega Ponto do Vinho","v":24000.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-13","c":"Supermercado Familia","v":30810.0,"f":"Liquidacao de titulo","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-14","c":"Hortifruti Natural","v":6110.0,"f":"TED","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-06-15","c":"Supermercado Familia","v":32230.0,"f":"TED","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-16","c":"Mercadao Central","v":20500.0,"f":"TED","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-06-17","c":"Mercadao Central","v":4910.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-06-18","c":"Frigorifico Vale Verde","v":12100.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-06-18","c":"Supermercado Familia","v":20630.0,"f":"TED","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-19","c":"Atacado Uniao Comercial","v":11958.81,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-19","c":"Mercadao Central","v":9857.83,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-06-19","c":"Atacado Uniao Comercial","v":31180.0,"f":"Pagamento de titulo","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-21","c":"Atacado Uniao Comercial","v":8820.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-23","c":"Rede Farmacias Popular","v":4260.0,"f":"Transferencia","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-06-23","c":"Mercadao Central","v":7230.0,"f":"Pix","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-06-23","c":"Comercial Amazonas","v":505.33,"f":"Boleto","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-06-23","c":"Supermercado Familia","v":27770.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-24","c":"Adega Ponto do Vinho","v":15000.0,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-24","c":"Hortifruti Natural","v":11085.02,"f":"Transferencia","r":"Centro-Oeste/GO","g":"Hortifruti"},{"d":"2026-06-26","c":"Supermercado Familia","v":13576.46,"f":"Boleto","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-26","c":"Comercial Amazonas","v":380.0,"f":"Deposito","r":"Norte/AM","g":"Higiene e Limpeza"},{"d":"2026-06-26","c":"Supermercado Familia","v":18090.0,"f":"Deposito em conta","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-27","c":"Distribuidora Bebidas Lopes","v":43511.58,"f":"Pix","r":"Sul/RS","g":"Bebidas"},{"d":"2026-06-27","c":"Adega Ponto do Vinho","v":8461.73,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"},{"d":"2026-06-28","c":"Frigorifico Vale Verde","v":4830.0,"f":"Pix","r":"Centro-Oeste/MT","g":"Congelados"},{"d":"2026-06-29","c":"Atacado Uniao Comercial","v":29320.0,"f":"Transferencia","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-29","c":"Atacado Uniao Comercial","v":8217.22,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-29","c":"Supermercado Familia","v":7470.0,"f":"Pix","r":"Norte/PA","g":"Hortifruti"},{"d":"2026-06-29","c":"Atacado Uniao Comercial","v":15710.0,"f":"Pix","r":"Sudeste/SP","g":"Mercearia"},{"d":"2026-06-29","c":"Rede Farmacias Popular","v":3605.2,"f":"Liquidacao de Titulo","r":"Sul/PR","g":"Higiene e Limpeza"},{"d":"2026-06-30","c":"Mercadao Central","v":5190.0,"f":"Deposito","r":"Nordeste/CE","g":"Mercearia"},{"d":"2026-06-30","c":"Adega Ponto do Vinho","v":24242.9,"f":"Pix","r":"Nordeste/PE","g":"Bebidas"}];
+
+  var MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun'];
+  var MONTHS_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho'];
+  var NI = 'Não identificado';
+  var NI_SHORT = 'N/I';
+
+  var REGION_PALETTE = ['#B9791F','#A6455A','#6E3B63','#3E6E8C','#8A6A2F','#3E7A54','#9C5B8A','#5C7A99','#C08A2E'];
+  var CATEGORY_COLOR = {
+    'Hortifruti':'#3E7A54',
+    'Bebidas':'#6E3B63',
+    'Mercearia':'#B9791F',
+    'Congelados':'#3E6E8C',
+    'Higiene e Limpeza':'#7A8CA6'
+  };
+  CATEGORY_COLOR[NI] = '#B6A88E';
+
+  function sumMap(list, keyFn){
+    var m = {};
+    for (var i=0;i<list.length;i++){
+      var r=list[i], k=keyFn(r);
+      m[k] = (m[k]||0) + r.v;
+    }
+    return m;
+  }
+  function totalOf(list){ var s=0; for (var i=0;i<list.length;i++) s+=list[i].v; return s; }
+
+  // ---- derive regions / categories sorted by total desc ----
+  var regionTotalsAll = sumMap(RECORDS.filter(function(r){return r.r;}), function(r){return r.r;});
+  var REGIONS = Object.keys(regionTotalsAll).sort(function(a,b){return regionTotalsAll[b]-regionTotalsAll[a];});
+  var REGION_COLOR = {};
+  REGIONS.forEach(function(reg,i){ REGION_COLOR[reg] = REGION_PALETTE[i % REGION_PALETTE.length]; });
+
+  var categoryTotalsAll = sumMap(RECORDS.filter(function(r){return r.g;}), function(r){return r.g;});
+  var CATEGORIES = Object.keys(categoryTotalsAll).sort(function(a,b){return categoryTotalsAll[b]-categoryTotalsAll[a];});
+
+  function ufOf(region){ return region.split('/')[1] || region; }
+
+  // ---- state ----
+  var selRegions = new Set();
+  var selCategories = new Set();
+
+  function regMatch(r){ return selRegions.size===0 || (r.r && selRegions.has(r.r)); }
+  function catMatch(r){ return selCategories.size===0 || (r.g && selCategories.has(r.g)); }
+  function fullMatch(r){ return regMatch(r) && catMatch(r); }
+
+  // ---- formatting ----
+  function fmtInt(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
+  function fmtCents(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtCompact(v){
+    if (v>=1000000) return 'R$ '+(v/1000000).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' mi';
+    if (v>=1000) return 'R$ '+Math.round(v/1000).toLocaleString('pt-BR')+' mil';
+    return fmtInt(v);
+  }
+  function monthOf(d){ return parseInt(d.slice(5,7),10); }
+  function dayOf(d){ return d.slice(8,10)+'/'+d.slice(5,7); }
+
+  // ---- count-up animation ----
+  var animState = {};
+  function animateNumber(id, to, fmt){
+    var el = document.getElementById(id);
+    if (!el) return;
+    var from = animState[id] !== undefined ? animState[id] : 0;
+    animState[id] = to;
+    if (Math.abs(to-from) < 0.5){ el.textContent = fmt(to); return; }
+    var start = null, dur = 650;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min(1, (ts-start)/dur);
+      var eased = 1 - Math.pow(1-p, 3);
+      el.textContent = fmt(from + (to-from)*eased);
+      if (p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function crossfadeText(el, text){
+    if (el.textContent === text) return;
+    el.style.transition = 'opacity .16s ease';
+    el.style.opacity = '0';
+    setTimeout(function(){ el.textContent = text; el.style.opacity='1'; }, 160);
+  }
+
+  // ---- tooltip ----
+  var ttEl = document.getElementById('tooltip');
+  function ttShow(html, x, y){
+    ttEl.innerHTML = html;
+    ttEl.classList.add('show');
+    positionTT(x,y);
+  }
+  function positionTT(x,y){
+    var pad = 14;
+    var rect = ttEl.getBoundingClientRect();
+    var w = rect.width || 240, h = rect.height || 80;
+    var left = x + 18, top = y - h - 14;
+    if (left + w + pad > window.innerWidth) left = x - w - 18;
+    if (left < pad) left = pad;
+    if (top < pad) top = y + 18;
+    if (top + h + pad > window.innerHeight) top = window.innerHeight - h - pad;
+    ttEl.style.left = left + 'px';
+    ttEl.style.top = top + 'px';
+  }
+  function ttHide(){ ttEl.classList.remove('show'); }
+
+  function bindTooltip(container){
+    container.addEventListener('mousemove', function(e){
+      var item = e.target.closest('[data-tt]');
+      if (!item){ return; }
+      positionTT(e.clientX, e.clientY);
+    });
+    container.addEventListener('mouseover', function(e){
+      var item = e.target.closest('[data-tt]');
+      if (!item) return;
+      ttShow(item.getAttribute('data-tt'), e.clientX, e.clientY);
+    });
+    container.addEventListener('mouseleave', function(){ ttHide(); });
+    container.addEventListener('click', function(e){
+      var item = e.target.closest('[data-tt]');
+      if (!item) return;
+      if (ttEl.classList.contains('show')){ ttHide(); }
+      else { var r=item.getBoundingClientRect(); ttShow(item.getAttribute('data-tt'), r.left+r.width/2, r.top); }
+    });
+  }
+
+  function ttHeader(title){ return '<div class="tt-title">'+title+'</div>'; }
+  function ttRow(a,b){ return '<div class="tt-row"><span>'+a+'</span><span>'+b+'</span></div>'; }
+
+  // shrink any bar/category label that still overflows its column after wrapping
+  // (never breaks mid-word -- only reduces font-size as a last resort)
+  function fitLabels(container){
+    var labels = container.querySelectorAll('.vbar-label');
+    labels.forEach(function(el){
+      var colWidth = el.parentElement.getBoundingClientRect().width;
+      var tries = 0;
+      while (el.getBoundingClientRect().width > colWidth + 1 && tries < 14){
+        var fs = parseFloat(window.getComputedStyle(el).fontSize);
+        if (fs <= 7.5) break;
+        el.style.fontSize = (fs*0.92)+'px';
+        tries++;
+      }
+    });
+  }
+
+  // ---- KPI chips ----
+  function renderChips(){
+    var regionWrap = document.getElementById('regionChips');
+    var catWrap = document.getElementById('categoryChips');
+    regionWrap.innerHTML = '';
+    catWrap.innerHTML = '';
+
+    REGIONS.forEach(function(reg){
+      var enabled = RECORDS.some(function(r){ return r.r===reg && catMatch(r); });
+      var btn = document.createElement('button');
+      btn.className = 'chip' + (selRegions.has(reg) ? ' is-selected' : '');
+      btn.textContent = reg;
+      btn.disabled = !enabled;
+      btn.addEventListener('click', function(){
+        if (selRegions.has(reg)) selRegions.delete(reg); else selRegions.add(reg);
+        render();
+      });
+      regionWrap.appendChild(btn);
+    });
+
+    CATEGORIES.forEach(function(cat){
+      var enabled = RECORDS.some(function(r){ return r.g===cat && regMatch(r); });
+      var btn = document.createElement('button');
+      btn.className = 'chip' + (selCategories.has(cat) ? ' is-selected' : '');
+      btn.textContent = cat;
+      btn.disabled = !enabled;
+      btn.addEventListener('click', function(){
+        if (selCategories.has(cat)) selCategories.delete(cat); else selCategories.add(cat);
+        render();
+      });
+      catWrap.appendChild(btn);
+    });
+
+    document.getElementById('clearFilters').hidden = (selRegions.size===0 && selCategories.size===0);
+  }
+
+  // ---- KPI cards ----
+  function renderKPIs(full){
+    var total = totalOf(full);
+    var n = full.length;
+    var ticket = n ? total/n : 0;
+
+    animateNumber('heroNumber', total, function(v){ return 'R$ '+Math.round(v).toLocaleString('pt-BR'); });
+    document.getElementById('heroPrecise').textContent = n ? (fmtCents(total)+' exatos') : '';
+
+    animateNumber('kpiCount', n, function(v){ return Math.round(v).toLocaleString('pt-BR'); });
+    animateNumber('kpiTicket', ticket, function(v){ return fmtInt(v); });
+
+    // melhor mes
+    var monthTotals = sumMap(full, function(r){ return monthOf(r.d); });
+    var bestMonth = null, bestVal = -1;
+    Object.keys(monthTotals).forEach(function(m){ if (monthTotals[m] > bestVal){ bestVal = monthTotals[m]; bestMonth = m; } });
+    crossfadeText(document.getElementById('kpiMonth'), bestMonth ? MONTHS_FULL[bestMonth-1] : '—');
+    document.getElementById('kpiMonthSub').textContent = bestMonth ? (fmtInt(bestVal)) : '';
+
+    // maior cliente
+    var clientTotals = sumMap(full, function(r){ return r.c; });
+    var bestClient = null, bestCVal = -1;
+    Object.keys(clientTotals).forEach(function(c){ if (clientTotals[c] > bestCVal){ bestCVal = clientTotals[c]; bestClient = c; } });
+    crossfadeText(document.getElementById('kpiClient'), bestClient || '—');
+    document.getElementById('kpiClientSub').textContent = bestClient ? fmtInt(bestCVal) : '';
+  }
+
+  // ---- month chart (fully filtered) ----
+  function renderMonthChart(full){
+    var el = document.getElementById('chartMonth');
+    var totals = sumMap(full, function(r){ return monthOf(r.d); });
+    var max = 0;
+    for (var m=1;m<=6;m++) max = Math.max(max, totals[m]||0);
+    var html = '';
+    for (var m2=1;m2<=6;m2++){
+      var v = totals[m2] || 0;
+      var h = max>0 ? Math.max(v/max*100, v>0?4:0) : 0;
+      var tt = ttHeader(MONTHS_FULL[m2-1]+'/2026') + ttRow('Total do mês', fmtCents(v));
+      var topClients = topNFor(full.filter(function(r){return monthOf(r.d)===m2;}), 5);
+      if (topClients.length){
+        tt += '<div class="tt-hr"></div><div class="tt-foot">5 maiores clientes no mês</div>';
+        topClients.forEach(function(c){ tt += ttRow(c[0], fmtInt(c[1])); });
+      } else {
+        tt += '<div class="tt-hr"></div><div class="tt-foot">Sem recebimentos neste mês</div>';
+      }
+      html += '<div class="vbar-item"><div class="vbar-track">' +
+        '<div class="vbar-value">'+ (v>0?fmtCompact(v):'') +'</div>' +
+        '</div>' +
+        '<div class="vbar-fill" data-tt="'+escAttr(tt)+'" style="height:'+h+'%; background:linear-gradient(180deg, '+lighten('#B9791F',18)+', #B9791F);"></div>' +
+        '<div class="vbar-label">'+MONTHS_SHORT[m2-1]+'</div></div>';
+    }
+    el.innerHTML = html;
+    fitLabels(el);
+  }
+
+  function topNFor(list, n){
+    var m = sumMap(list, function(r){return r.c;});
+    return Object.keys(m).map(function(c){return [c,m[c]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,n);
+  }
+
+  // ---- region chart (category-filter only; all bars always shown) ----
+  function renderRegionChart(){
+    var el = document.getElementById('chartRegion');
+    document.getElementById('regionNote').textContent = selCategories.size ? Array.from(selCategories).join(', ') : 'todas as categorias';
+    var byRegionList = RECORDS.filter(catMatch);
+    var totals = sumMap(byRegionList, function(r){ return r.r || NI; });
+    var order = REGIONS.concat([NI]);
+    var max = 0; order.forEach(function(k){ max = Math.max(max, totals[k]||0); });
+    var html = '';
+    order.forEach(function(reg){
+      var v = totals[reg] || 0;
+      var h = max>0 ? Math.max(v/max*100, v>0?4:0) : 0;
+      var color = reg===NI ? CATEGORY_COLOR[NI] : REGION_COLOR[reg];
+      var isSel = selRegions.has(reg);
+      var dim = selRegions.size>0 && !isSel;
+      var clientsHere = topNFor(byRegionList.filter(function(r){ return (r.r||NI)===reg; }), 6);
+      var tt = ttHeader(reg) + ttRow('Total', fmtCents(v));
+      if (clientsHere.length){
+        tt += '<div class="tt-hr"></div><div class="tt-foot">Clientes nesta região</div>';
+        clientsHere.forEach(function(c){ tt += ttRow(c[0], fmtInt(c[1])); });
+      }
+      html += '<div class="vbar-item'+(dim?' is-dim':'')+(isSel?' is-active':'')+'"><div class="vbar-track">' +
+        '<div class="vbar-value">'+ (v>0?fmtCompact(v):'') +'</div>' +
+        '</div>' +
+        '<div class="vbar-fill" data-tt="'+escAttr(tt)+'" style="height:'+h+'%; background:linear-gradient(180deg, '+lighten(color,16)+', '+color+');"></div>' +
+        '<div class="vbar-label is-region">'+(reg===NI?NI_SHORT:ufOf(reg))+'</div></div>';
+    });
+    el.innerHTML = html;
+    fitLabels(el);
+  }
+
+  // ---- category chart (region-filter only; all bars always shown) ----
+  function renderCategoryChart(){
+    var el = document.getElementById('chartCategory');
+    document.getElementById('categoryNote').textContent = selRegions.size ? Array.from(selRegions).join(', ') : 'todas as regiões';
+    var byCatList = RECORDS.filter(regMatch);
+    var totals = sumMap(byCatList, function(r){ return r.g || NI; });
+    var order = CATEGORIES.concat([NI]);
+    var max = 0; order.forEach(function(k){ max = Math.max(max, totals[k]||0); });
+    var html = '';
+    order.forEach(function(cat){
+      var v = totals[cat] || 0;
+      var h = max>0 ? Math.max(v/max*100, v>0?4:0) : 0;
+      var color = CATEGORY_COLOR[cat];
+      var isSel = selCategories.has(cat);
+      var dim = selCategories.size>0 && !isSel;
+      var clientsHere = topNFor(byCatList.filter(function(r){ return (r.g||NI)===cat; }), 6);
+      var tt = ttHeader(cat) + ttRow('Total', fmtCents(v));
+      if (clientsHere.length){
+        tt += '<div class="tt-hr"></div><div class="tt-foot">Clientes nesta categoria</div>';
+        clientsHere.forEach(function(c){ tt += ttRow(c[0], fmtInt(c[1])); });
+      }
+      html += '<div class="vbar-item'+(dim?' is-dim':'')+(isSel?' is-active':'')+'"><div class="vbar-track">' +
+        '<div class="vbar-value">'+ (v>0?fmtCompact(v):'') +'</div>' +
+        '</div>' +
+        '<div class="vbar-fill" data-tt="'+escAttr(tt)+'" style="height:'+h+'%; background:linear-gradient(180deg, '+lighten(color,16)+', '+color+');"></div>' +
+        '<div class="vbar-label">'+cat+'</div></div>';
+    });
+    el.innerHTML = html;
+    fitLabels(el);
+  }
+
+  // ---- ranking chart (fully filtered) ----
+  var CLIENT_META = {};
+  RECORDS.forEach(function(r){ if (!CLIENT_META[r.c]) CLIENT_META[r.c] = {r:r.r, g:r.g}; });
+
+  function renderRankingChart(full){
+    var el = document.getElementById('chartRanking');
+    var totals = sumMap(full, function(r){ return r.c; });
+    var counts = {};
+    full.forEach(function(r){ counts[r.c] = (counts[r.c]||0)+1; });
+    var ranked = Object.keys(totals).map(function(c){return [c, totals[c]];}).sort(function(a,b){return b[1]-a[1];});
+    var max = ranked.length ? ranked[0][1] : 0;
+    if (!ranked.length){ el.innerHTML = '<div class="chart-empty">Sem clientes nesta combinação de filtros.</div>'; return; }
+    var html = '';
+    ranked.forEach(function(pair, idx){
+      var name = pair[0], v = pair[1];
+      var meta = CLIENT_META[name] || {};
+      var color = CATEGORY_COLOR[meta.g || NI];
+      var w = max>0 ? Math.max(v/max*100, 3) : 0;
+      var n = counts[name] || 0;
+      var avg = n ? v/n : 0;
+      var tt = ttHeader(name) +
+        ttRow('Total no período', fmtCents(v)) +
+        ttRow('Recebimentos', n) +
+        ttRow('Ticket médio', fmtInt(avg)) +
+        '<div class="tt-hr"></div>' +
+        ttRow('Região', meta.r || NI) +
+        ttRow('Categoria', meta.g || NI);
+      html += '<div class="rank-row">' +
+        '<span class="rank-idx">'+(idx+1)+'</span>' +
+        '<span class="rank-name">'+name+'</span>' +
+        '<span class="rank-track"><span class="rank-fill" data-tt="'+escAttr(tt)+'" style="width:'+w+'%; background:linear-gradient(90deg, '+color+', '+lighten(color,14)+');"></span></span>' +
+        '<span class="rank-value">'+fmtCompact(v)+'</span>' +
+        '</div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function escAttr(s){ return s.replace(/"/g,'&quot;'); }
+  function lighten(hex, pct){
+    var c = hex.replace('#','');
+    var num = parseInt(c,16);
+    var r = (num>>16)&255, g=(num>>8)&255, b=num&255;
+    r = Math.min(255, Math.round(r + (255-r)*pct/100));
+    g = Math.min(255, Math.round(g + (255-g)*pct/100));
+    b = Math.min(255, Math.round(b + (255-b)*pct/100));
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  // ---- master render ----
+  function render(){
+    var full = RECORDS.filter(fullMatch);
+    renderChips();
+    var empty = document.getElementById('emptyState');
+    var normal = document.getElementById('normalContent');
+    if (full.length === 0){
+      empty.classList.add('show');
+      normal.style.display = 'none';
+      ttHide();
+      return;
+    } else {
+      empty.classList.remove('show');
+      normal.style.display = '';
+    }
+    renderKPIs(full);
+    renderMonthChart(full);
+    renderRegionChart();
+    renderCategoryChart();
+    renderRankingChart(full);
+  }
+
+  document.getElementById('clearFilters').addEventListener('click', function(){ selRegions.clear(); selCategories.clear(); render(); });
+  document.getElementById('emptyClear').addEventListener('click', function(){ selRegions.clear(); selCategories.clear(); render(); });
+
+  [document.getElementById('chartMonth'), document.getElementById('chartRegion'), document.getElementById('chartCategory'), document.getElementById('chartRanking')].forEach(bindTooltip);
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.getElementById('tab-'+btn.getAttribute('data-tab')).classList.add('active');
+      ttHide();
+    });
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 150);
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
